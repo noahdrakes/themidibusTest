@@ -1,11 +1,16 @@
 package org.example;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RawMidiListenerTest implements RawMidiListener{
     MidiBus mybus;
+    byte[] currentMidiByte = new byte[3];
 
     // Test that turns on and off Ab
     @Test
@@ -31,11 +36,13 @@ class RawMidiListenerTest implements RawMidiListener{
 
         mybus.sendMessage(rawBytes);
         Thread.sleep(100);
+
+        for (int i = 0; i < 3; i++){
+            Assertions.assertEquals(currentMidiByte[i], rawBytes[i]);
+        }
     }
 
-    // Test that seems to fail turning the note off ?
-    // Nevermind
-    
+    // Send invalid Midi note
 
     @Test
     public void sendMidiMessageFailTest() throws InterruptedException{
@@ -43,30 +50,30 @@ class RawMidiListenerTest implements RawMidiListener{
         Integer[] rawMsgList = new Integer[3];
         byte[] rawBytes = new byte[3];
 
-//        RawMidiListener listener = null;
+        ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(outputStreamCaptor));
+
         mybus.addMidiListener(this);
 
-        rawBytes[0] = (byte) 144;
-        rawBytes[1] = (byte) 64;
-        rawBytes[2] = (byte) 127;
+        mybus.addMidiListener(this);
+
+        rawBytes[0] = (byte) 200;
+        rawBytes[1] = (byte) 200;
+        rawBytes[2] = (byte) 200;
 
         mybus.sendMessage(rawBytes);
 
-        Thread.sleep(2000);
+        System.setErr(System.err);
 
-        rawBytes[0] = (byte) 128;
-        rawBytes[1] = (byte) 64;
-        rawBytes[2] = (byte) 0;
+        String errorMessage = outputStreamCaptor.toString().trim(); // Get the printed error message
+//        assertTrue(errorMessage.contains("The MidiBus Warning: Message not sent, invalid MIDI data"));
+        Assertions.assertEquals(errorMessage,"The MidiBus Warning: Message not sent, invalid MIDI data" );
 
-        mybus.sendMessage(rawBytes);
-        Thread.sleep(100);
     }
-
-    
-
 
     @Override
     public void rawMidiMessage(byte[] data){
+        currentMidiByte = data;
         System.out.println("here");
         for (int i = 0; i < data.length; i++){
             System.out.println("raw midi: ");

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 
-public class WhiteBoxTests implements SimpleMidiListener {
+public class SimpleMidiListenerTest implements SimpleMidiListener  {
 
     String globalpitch;
     int globalVelocity;
